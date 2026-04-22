@@ -115,6 +115,24 @@ describe('whitespace control', function () {
         '\n\n{{~#if foo~}} \n\nbar \n\n{{~^~}} \n\nbaz \n\n{{~/if~}}\n\n'
       ).toCompileTo('baz');
     });
+
+    it('GH-1716: should strip trailing indent from chained else if blocks', function () {
+      expectTemplate(
+        '{{#if a}}\n {{#if a.b}}\n no\n {{else if a.b}}\n no\n {{else}}\n yes\n {{/if}}\n after\n{{/if}}'
+      )
+        .withInput({ a: { c: true } })
+        .toCompileTo(' yes\n after\n');
+    });
+
+    it('GH-2031: whitespace control in one else if branch should not affect another branch', function () {
+      var string =
+        '{{#if a}}\na\n{{else if b}}\nb\n{{else if c}}\nc\n{{~else if d}}\nd\n{{else if e}}\ne\n{{else if f}}\nf{{/if}}';
+      expectTemplate(string).withInput({ c: 1 }).toCompileTo('c');
+
+      expectTemplate(string).withInput({ d: 1 }).toCompileTo('d\n');
+
+      expectTemplate(string).withInput({ e: 1 }).toCompileTo('e\n');
+    });
   });
 
   it('should strip whitespace around partials', function () {
